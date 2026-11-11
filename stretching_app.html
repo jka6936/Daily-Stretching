@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 편안한 스트레칭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: #f0f9ff; /* sky-50 */
+            color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 사람 몸통 SVG 호버 효과 */
+        .body-part {
+            fill: #bae6fd; /* sky-200 */
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .body-part:hover {
+            fill: #bbf7d0; /* green-200 */
+            transform: scale(1.02);
+            transform-origin: center;
+        }
+        
+        .body-group {
+            transition: transform 0.2s;
+            transform-origin: center;
+        }
+        .body-group:active {
+            transform: scale(0.95);
+        }
+
+        /* 타이머 5초 카운트다운 애니메이션 */
+        @keyframes popOut {
+            0% { transform: scale(1); color: #0369a1; }
+            50% { transform: scale(1.6); color: #16a34a; font-weight: 800; }
+            100% { transform: scale(1.6); color: #16a34a; font-weight: 800; }
+        }
+        .timer-countdown {
+            animation: popOut 1s infinite;
+        }
+
+        /* 페이드 인/아웃 전환 효과 */
+        .fade-in { animation: fadeIn 0.4s ease-in-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-8">
+
+    <!-- 헤더 및 누적 시간 -->
+    <header class="w-full max-w-md flex flex-col items-center mb-8 fade-in">
+        <h1 class="text-2xl font-bold text-sky-800 mb-2">🌿 편안한 스트레칭</h1>
+        <div class="bg-white px-6 py-3 rounded-2xl shadow-sm border border-sky-100 flex items-center gap-3">
+            <span class="text-3xl">⏱️</span>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">오늘 하루 스트레칭 시간</p>
+                <p class="text-lg font-bold text-green-600"><span id="total-time">0</span>분</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 화면: 사람 몸 그림 -->
+    <main id="main-view" class="w-full max-w-md flex flex-col items-center fade-in bg-white p-6 rounded-3xl shadow-sm border border-sky-100">
+        <p class="text-center text-sky-700 font-semibold mb-6">풀어주고 싶은 부위를 눌러주세요</p>
+        
+        <svg viewBox="0 0 300 500" class="w-full max-w-[280px] h-auto overflow-visible">
+            <!-- 머리 (클릭 불가, 디자인용) -->
+            <circle cx="150" cy="60" r="35" fill="#e2e8f0" />
+            
+            <!-- 목 -->
+            <g class="body-group cursor-pointer" onclick="startStretching('neck')">
+                <rect class="body-part" x="135" y="90" width="30" height="25" rx="5" />
+                <text x="150" y="108" text-anchor="middle" font-size="12" font-weight="bold" fill="#0369a1" pointer-events="none">목</text>
+            </g>
+
+            <!-- 어깨 -->
+            <g class="body-group cursor-pointer" onclick="startStretching('shoulders')">
+                <rect class="body-part" x="70" y="120" width="160" height="45" rx="20" />
+                <text x="150" y="148" text-anchor="middle" font-size="14" font-weight="bold" fill="#0369a1" pointer-events="none">어깨</text>
+            </g>
+
+            <!-- 허리 / 몸통 -->
+            <g class="body-group cursor-pointer" onclick="startStretching('back')">
+                <rect class="body-part" x="100" y="170" width="100" height="110" rx="15" />
+                <text x="150" y="230" text-anchor="middle" font-size="14" font-weight="bold" fill="#0369a1" pointer-events="none">허리</text>
+            </g>
+
+            <!-- 허벅지 -->
+            <g class="body-group cursor-pointer" onclick="startStretching('thighs')">
+                <rect class="body-part" x="100" y="285" width="45" height="110" rx="20" />
+                <rect class="body-part" x="155" y="285" width="45" height="110" rx="20" />
+                <text x="150" y="345" text-anchor="middle" font-size="14" font-weight="bold" fill="#0369a1" pointer-events="none">허벅지</text>
+            </g>
+
+            <!-- 종아리 -->
+            <g class="body-group cursor-pointer" onclick="startStretching('calves')">
+                <rect class="body-part" x="105" y="400" width="35" height="90" rx="15" />
+                <rect class="body-part" x="160" y="400" width="35" height="90" rx="15" />
+                <text x="150" y="450" text-anchor="middle" font-size="14" font-weight="bold" fill="#0369a1" pointer-events="none">종아리</text>
+            </g>
+        </svg>
+    </main>
+
+    <!-- 스트레칭 진행 화면 -->
+    <section id="stretch-view" class="hidden w-full max-w-md flex-col items-center text-center fade-in">
+        <!-- 프로그레스 바 -->
+        <div class="w-full flex gap-2 mb-6">
+            <div id="step-1" class="h-2 flex-1 rounded-full bg-sky-200 transition-colors"></div>
+            <div id="step-2" class="h-2 flex-1 rounded-full bg-sky-200 transition-colors"></div>
+            <div id="step-3" class="h-2 flex-1 rounded-full bg-sky-200 transition-colors"></div>
+        </div>
+
+        <div class="bg-white w-full py-12 px-6 rounded-3xl shadow-sm border border-green-100 flex flex-col items-center">
+            <div id="emoji-display" class="text-7xl mb-6">🙆</div>
+            <h2 id="desc-line1" class="text-lg font-semibold text-gray-800 mb-1">오른손으로 왼쪽 머리를 잡고</h2>
+            <h2 id="desc-line2" class="text-lg font-semibold text-gray-800 mb-10">오른쪽으로 지그시 당겨주세요.</h2>
+            
+            <div class="relative w-32 h-32 flex items-center justify-center rounded-full bg-sky-50 border-4 border-sky-100 mb-6">
+                <span id="timer-display" class="text-5xl font-bold text-sky-700 transition-all duration-300 inline-block">30</span>
+            </div>
+
+            <button onclick="cancelStretching()" class="mt-4 text-gray-400 hover:text-gray-600 underline underline-offset-4 text-sm">
+                그만하기
+            </button>
+        </div>
+    </section>
+
+    <!-- 완료 축하 화면 -->
+    <section id="finish-view" class="hidden w-full max-w-md flex-col items-center text-center fade-in bg-white p-10 rounded-3xl shadow-sm border border-green-100 mt-10">
+        <div class="text-6xl mb-4">✨</div>
+        <h2 class="text-2xl font-bold text-green-700 mb-2">수고하셨습니다!</h2>
+        <p class="text-gray-600 mb-8">몸이 한결 가벼워지셨나요?</p>
+        <button onclick="returnToMain()" class="bg-green-400 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95">
+            처음으로 돌아가기
+        </button>
+    </section>
+
+    <script>
+        // 스트레칭 데이터 (부위별 동작 3개)
+        const routines = {
+            neck: [
+                { emoji: "🙆‍♀️", line1: "오른손으로 왼쪽 머리를 잡고", line2: "오른쪽으로 지그시 당겨주세요." },
+                { emoji: "🙇‍♂️", line1: "양손을 깍지 끼고 뒤통수에 대어", line2: "앞으로 부드럽게 숙여주세요." },
+                { emoji: "💆", line1: "엄지손가락으로 턱을 받치고", line2: "천천히 위로 밀어 올려주세요." }
+            ],
+            shoulders: [
+                { emoji: "🤷‍♀️", line1: "양어깨를 귀 쪽으로 으쓱 끌어올리고", line2: "3초 뒤에 힘을 빼며 툭 떨어뜨리세요." },
+                { emoji: "🙅‍♂️", line1: "오른팔을 가슴 앞으로 쭉 펴고", line2: "왼팔로 걸어 가슴 쪽으로 당겨주세요." },
+                { emoji: "🙆‍♂️", line1: "양손을 어깨 위에 가볍게 올리고", line2: "팔꿈치로 큰 원을 그리며 돌려주세요." }
+            ],
+            back: [
+                { emoji: "🧎‍♀️", line1: "바닥에 무릎을 꿇고 엎드려", line2: "두 팔을 앞으로 쭉 뻗어주세요." },
+                { emoji: "🧍‍♂️", line1: "양손을 허리에 얹고", line2: "골반을 천천히 크게 돌려주세요." },
+                { emoji: "🧘‍♀️", line1: "누워서 양무릎을 가슴 쪽으로 당겨", line2: "양팔로 안고 가볍게 둥글게 말아주세요." }
+            ],
+            thighs: [
+                { emoji: "🦩", line1: "똑바로 서서 오른발을 뒤로 굽혀", line2: "오른손으로 발등을 잡고 당겨주세요." },
+                { emoji: "🚶‍♂️", line1: "한쪽 발을 앞으로 크게 내딛고", line2: "무릎을 굽혀 런지 자세를 만들어주세요." },
+                { emoji: "🧘‍♂️", line1: "바닥에 앉아 발바닥을 마주 붙이고", line2: "무릎을 바닥 쪽으로 지그시 눌러주세요." }
+            ],
+            calves: [
+                { emoji: "🧗‍♀️", line1: "벽을 짚고 한 발을 뒤로 멀리 뻗어", line2: "발뒤꿈치를 바닥에 꾹 눌러주세요." },
+                { emoji: "🧘‍♀️", line1: "다리를 쭉 펴고 앉아", line2: "발끝을 몸통 쪽으로 최대한 당겨주세요." },
+                { emoji: "🧍‍♀️", line1: "계단이나 턱 끝에 발볼만 대고 서서", line2: "발뒤꿈치를 아래로 천천히 내려주세요." }
+            ]
+        };
+
+        // 앱 상태 변수
+        let currentRoutine = [];
+        let currentIndex = 0;
+        let timeLeft = 30;
+        let timerInterval = null;
+        let totalStretchingSeconds = 0;
+
+        // 로컬 스토리지에서 오늘 날짜와 누적 시간 불러오기
+        function loadTotalTime() {
+            const today = new Date().toLocaleDateString();
+            const savedDate = localStorage.getItem('stretchDate');
+            
+            if (savedDate !== today) {
+                // 날짜가 바뀌었으면 초기화
+                localStorage.setItem('stretchDate', today);
+                localStorage.setItem('stretchTime', '0');
+                totalStretchingSeconds = 0;
+            } else {
+                totalStretchingSeconds = parseInt(localStorage.getItem('stretchTime') || '0', 10);
+            }
+            updateTotalTimeDisplay();
+        }
+
+        // 누적 시간 화면 업데이트
+        function updateTotalTimeDisplay() {
+            const minutes = Math.floor(totalStretchingSeconds / 60);
+            document.getElementById('total-time').innerText = minutes;
+        }
+
+        // 누적 시간 저장
+        function addCompletedTime(seconds) {
+            totalStretchingSeconds += seconds;
+            localStorage.setItem('stretchTime', totalStretchingSeconds.toString());
+            updateTotalTimeDisplay();
+        }
+
+        // 화면 전환 함수
+        function showView(viewId) {
+            document.getElementById('main-view').classList.add('hidden');
+            document.getElementById('stretch-view').classList.add('hidden');
+            document.getElementById('finish-view').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        // 스트레칭 시작
+        function startStretching(part) {
+            currentRoutine = routines[part];
+            currentIndex = 0;
+            showView('stretch-view');
+            resetSteps();
+            playCurrentExercise();
+        }
+
+        // 스텝 UI 리셋
+        function resetSteps() {
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`step-${i}`).className = "h-2 flex-1 rounded-full transition-colors bg-sky-100";
+            }
+        }
+
+        // 현재 동작 실행
+        function playCurrentExercise() {
+            const exercise = currentRoutine[currentIndex];
+            
+            // UI 업데이트
+            document.getElementById('emoji-display').innerText = exercise.emoji;
+            document.getElementById('desc-line1').innerText = exercise.line1;
+            document.getElementById('desc-line2').innerText = exercise.line2;
+            
+            // 진행도 바 업데이트
+            for (let i = 1; i <= 3; i++) {
+                const stepEl = document.getElementById(`step-${i}`);
+                if (i <= currentIndex + 1) {
+                    stepEl.className = "h-2 flex-1 rounded-full transition-colors bg-green-400";
+                }
+            }
+
+            // 타이머 초기화
+            timeLeft = 30;
+            updateTimerDisplay();
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(handleTimerTick, 1000);
+        }
+
+        // 매 초 타이머 처리
+        function handleTimerTick() {
+            timeLeft--;
+            updateTimerDisplay();
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                // 동작 하나가 끝날 때마다 전체 누적 시간 30초 추가
+                addCompletedTime(30); 
+                
+                currentIndex++;
+                if (currentIndex < currentRoutine.length) {
+                    playCurrentExercise(); // 다음 동작 진행
+                } else {
+                    finishRoutine(); // 세트 완료
+                }
+            }
+        }
+
+        // 타이머 UI 업데이트 (5초 남았을 때 효과 추가)
+        function updateTimerDisplay() {
+            const timerEl = document.getElementById('timer-display');
+            timerEl.innerText = timeLeft;
+
+            if (timeLeft > 0 && timeLeft <= 5) {
+                timerEl.classList.add('timer-countdown');
+            } else {
+                timerEl.classList.remove('timer-countdown');
+            }
+        }
+
+        // 도중에 그만하기
+        function cancelStretching() {
+            clearInterval(timerInterval);
+            
+            // 도중에 멈추더라도 현재 동작에서 30초 중 수행한 만큼만 초(second) 단위로 더해줍니다.
+            const playedTime = 30 - timeLeft;
+            if(playedTime > 0) addCompletedTime(playedTime);
+
+            returnToMain();
+        }
+
+        // 한 세트(3개) 완료
+        function finishRoutine() {
+            showView('finish-view');
+        }
+
+        // 메인 화면으로 돌아가기
+        function returnToMain() {
+            showView('main-view');
+        }
+
+        // 초기화 실행
+        window.onload = () => {
+            loadTotalTime();
+        };
+    </script>
+</body>
+</html>
